@@ -1,0 +1,15 @@
+.arrow-button {
+    background-color: #1DA1F2; /* Twitter blue */
+    color: white;
+    border: none;
+    border-radius: 50%;
+    padding: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .arrow-button:hover {
+    background-color: #0d8bcf; /* Darker blue on hover */
+  }
+  
