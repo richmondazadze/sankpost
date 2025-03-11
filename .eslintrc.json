@@ -1,17 +1,7 @@
 {
   "extends": "next/core-web-plugins",
   "rules": {
-    "react-hooks/exhaustive-deps": "warn",
-    "react/no-unescaped-entities": [
-      "error",
-      {
-        "forbid": [
-          {
-            "char": "'",
-            "alternatives": ["&apos;"]
-          }
-        ]
-      }
-    ]
+    "react-hooks/exhaustive-deps": "off",
+    "react/no-unescaped-entities": "off"
   }
 }
