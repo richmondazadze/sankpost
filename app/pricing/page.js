@@ -281,26 +281,137 @@ export default function PricingPage() {
     <div className="min-h-screen bg-black text-gray-100">
       <Navbar />
       <main className="container mx-auto px-8 py-20">
-        <div className="mb-8 p-4 bg-red-100 text-red-800 rounded-lg max-w-6xl mx-auto">
-          <h2 className="text-lg font-bold">
-            Urgent Payment Integration Notice
-          </h2>
-          <p>
-            {
-              "Our payment integration is currently in the free testing phase. For payment processing, please use the following test card details:"
-            }
-          </p>
-          <ul className="list-disc pl-5">
-            <li>
-              Card Number: <strong>4242 4242 4242 4242</strong>
-            </li>
-            <li>
-              Expiration Date: <strong>Any future date</strong>
-            </li>
-            <li>
-              Security Code: <strong>Any 3-digit code</strong>
-            </li>
-          </ul>
+        <div className="relative mb-12 mx-4 md:mx-auto max-w-4xl">
+          {/* Background with gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-red-500/5 to-red-500/10 backdrop-blur-sm rounded-2xl" />
+
+          {/* Content container */}
+          <div className="relative p-6 md:p-8 border border-red-500/20 rounded-2xl bg-gray-900/40">
+            {/* Header with icon */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-red-500/10">
+                <svg
+                  className="w-6 h-6 text-red-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+              </div>
+              <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent">
+                Test Payment Notice
+              </h2>
+            </div>
+
+            {/* Description */}
+            <p className="text-gray-300 mb-6 text-sm md:text-base">
+              Our payment integration is currently in testing phase. Please use
+              the following test card details for any transactions:
+            </p>
+
+            {/* Card details grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              {[
+                {
+                  label: "Card Number",
+                  value: "4242 4242 4242 4242",
+                  icon: (
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                      />
+                    </svg>
+                  ),
+                },
+                {
+                  label: "Expiration Date",
+                  value: "Any future date",
+                  icon: (
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  ),
+                },
+                {
+                  label: "Security Code",
+                  value: "Any 3 digits",
+                  icon: (
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      />
+                    </svg>
+                  ),
+                },
+              ].map((item, index) => (
+                <div
+                  key={index}
+                  className="flex flex-col space-y-2 p-4 rounded-xl bg-gray-800/50 border border-gray-700/50 hover:border-red-500/30 transition-colors duration-300"
+                >
+                  <div className="flex items-center gap-2 text-gray-400">
+                    {item.icon}
+                    <span className="text-sm">{item.label}</span>
+                  </div>
+                  <p className="font-mono text-red-400 font-medium">
+                    {item.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Note */}
+            <div className="text-sm text-gray-400 flex items-center gap-2">
+              <svg
+                className="w-4 h-4 text-yellow-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span>
+                These details are for testing purposes only. No real charges
+                will be made.
+              </span>
+            </div>
+          </div>
         </div>
 
         <h1 className="text-5xl font-bold mb-12 mt-20 text-center text-white">
