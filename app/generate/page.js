@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@nextui-org/react";
 import { Input } from "@nextui-org/react";
 import { Textarea } from "@nextui-org/react";
@@ -78,23 +78,7 @@ export default function GenerateContent() {
   const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (!apiKey) {
-      console.error("Gemini API key is not set");
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      router.push("/");
-    } else if (isSignedIn && user) {
-      console.log("User loaded:", user);
-      fetchUserPoints();
-      fetchContentHistory();
-    }
-  }, [isLoaded, isSignedIn, user, router]);
-
-  const fetchUserPoints = async () => {
+  const fetchUserPoints = useCallback(async () => {
     if (user?.id) {
       console.log("Fetching points for user:", user.id);
       const points = await getUserPoints(user.id);
@@ -113,17 +97,39 @@ export default function GenerateContent() {
         }
       }
     }
-  };
+  }, [user]);
 
-  const fetchContentHistory = async () => {
+  const fetchContentHistory = useCallback(async () => {
     if (user?.id) {
       const contentHistory = await getGeneratedContentHistory(user.id);
       setHistory(contentHistory);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      router.push("/");
+    } else if (isSignedIn && user) {
+      console.log("User loaded:", user);
+      fetchUserPoints();
+      fetchContentHistory();
+    }
+  }, [
+    isLoaded,
+    isSignedIn,
+    user,
+    router,
+    fetchUserPoints,
+    fetchContentHistory,
+  ]);
 
   const handleGenerate = async () => {
-    if (!genAI || !user?.id || userPoints === null || userPoints < POINTS_PER_GENERATION) {
+    if (
+      !genAI ||
+      !user?.id ||
+      userPoints === null ||
+      userPoints < POINTS_PER_GENERATION
+    ) {
       alert("Not enough points or API key not set.");
       return;
     }
@@ -145,7 +151,7 @@ export default function GenerateContent() {
             const reader = new FileReader();
             reader.onloadend = () => {
               try {
-                const base64Data = reader.result.split(',')[1];
+                const base64Data = reader.result.split(",")[1];
                 resolve(base64Data);
               } catch (error) {
                 reject(error);
@@ -159,8 +165,8 @@ export default function GenerateContent() {
           parts.push({
             inlineData: {
               data: imageData,
-              mimeType: image.type
-            }
+              mimeType: image.type,
+            },
           });
 
           console.log("Parts array created:", parts.length, "items");
@@ -173,13 +179,15 @@ export default function GenerateContent() {
       console.log("Generating content...");
       const result = await model.generateContent(parts);
       console.log("Content generated successfully");
-      
+
       const generatedText = result.response.text();
       console.log("Response text extracted");
 
       let content;
       if (contentType === "twitter") {
-        content = generatedText.split("\n\n").filter((tweet) => tweet.trim() !== "");
+        content = generatedText
+          .split("\n\n")
+          .filter((tweet) => tweet.trim() !== "");
       } else {
         content = [generatedText];
       }
@@ -187,7 +195,10 @@ export default function GenerateContent() {
       setGeneratedContent(content);
 
       // Update points
-      const updatedUser = await updateUserPoints(user.id, -POINTS_PER_GENERATION);
+      const updatedUser = await updateUserPoints(
+        user.id,
+        -POINTS_PER_GENERATION
+      );
       if (updatedUser) {
         setUserPoints(updatedUser.points);
       }
@@ -206,9 +217,11 @@ export default function GenerateContent() {
       console.error("Detailed error in content generation:", {
         error: error,
         message: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
-      setGeneratedContent(["An error occurred while generating content: " + error.message]);
+      setGeneratedContent([
+        "An error occurred while generating content: " + error.message,
+      ]);
     } finally {
       setIsLoading(false);
     }

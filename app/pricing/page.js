@@ -286,8 +286,9 @@ export default function PricingPage() {
             Urgent Payment Integration Notice
           </h2>
           <p>
-            Our payment integration is currently in the free testing phase. For
-            payment processing, please use the following test card details:
+            {
+              "Our payment integration is currently in the free testing phase. For payment processing, please use the following test card details:"
+            }
           </p>
           <ul className="list-disc pl-5">
             <li>

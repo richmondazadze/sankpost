@@ -1,11 +1,13 @@
+import * as dotenv from "dotenv";
+dotenv.config();
+
 export default {
   dialect: "postgresql",
   schema: "./utils/db/schema.ts",
   out: "./drizzle",
 
   dbCredentials: {
-    url: "postgresql://sankpost_owner:1nsQRh2kXqeY@ep-yellow-shadow-a5ovm44r.us-east-2.aws.neon.tech/sankpost?sslmode=require",
-    connectionString:
-      "postgresql://sankpost_owner:1nsQRh2kXqeY@ep-yellow-shadow-a5ovm44r.us-east-2.aws.neon.tech/sankpost?sslmode=require",
+    url: process.env.NEXT_PUBLIC_DATABASE_URL,
+    connectionString: process.env.NEXT_PUBLIC_DATABASE_URL,
   },
 };
