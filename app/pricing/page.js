@@ -278,9 +278,20 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-gray-100">
+    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black text-gray-100">
       <Navbar />
-      <main className="container mx-auto px-8 py-20">
+      <main className="container mx-auto px-4 py-20">
+        {/* Hero Section */}
+        <div className="text-center mb-16">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-white via-blue-400 to-blue-600 bg-clip-text text-transparent">
+            Choose Your Plan
+          </h1>
+          <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+            Scale your social media presence with our AI-powered content
+            generation
+          </p>
+        </div>
+
         <div className="relative mb-12 mx-4 md:mx-auto max-w-4xl">
           {/* Background with gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-red-500/5 to-red-500/10 backdrop-blur-sm rounded-2xl" />
@@ -414,55 +425,150 @@ export default function PricingPage() {
           </div>
         </div>
 
-        <h1 className="text-5xl font-bold mb-12 mt-20 text-center text-white">
-          Pricing Plans
-        </h1>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        {/* Pricing Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-7xl mx-auto mt-16">
           {pricingPlans.map((plan, index) => (
             <div
               key={index}
-              className="p-8 rounded-lg border border-gray-800 flex flex-col"
+              className={`relative transform hover:scale-105 transition-all duration-300 ${
+                index === 1 ? "md:-mt-4 md:mb-4" : ""
+              }`}
             >
-              <h2 className="text-2xl font-bold mb-4 text-white">
-                {plan.name}
-              </h2>
-              <p className="text-4xl font-bold mb-6 text-white">
-                ${plan.price}
-                <span className="text-lg font-normal text-gray-400">
-                  /month
-                </span>
-              </p>
-              <ul className="mb-8 flex-grow">
-                {plan.features.map((feature, featureIndex) => (
-                  <li
-                    key={featureIndex}
-                    className="flex items-center mb-3 text-gray-300"
-                  >
-                    <CheckIcon className="w-5 h-5 mr-2 text-green-500" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-              {plan.name === "Enterprise" ? (
-                <Button
-                  onClick={handleContactUs}
-                  className="w-full bg-white text-black hover:bg-gray-200"
-                >
-                  Contact Us
-                </Button>
-              ) : (
-                <Button
-                  onClick={() => plan.priceId && handleSubscribe(plan.priceId)}
-                  disabled={isLoading || !plan.priceId}
-                  className="w-full bg-white text-black hover:bg-gray-200"
-                >
-                  {loadingPlanId === plan.priceId
-                    ? "Processing..."
-                    : "Choose Plan"}
-                </Button>
+              {/* Popular badge */}
+              {index === 1 && (
+                <div className="absolute -top-5 left-0 right-0 flex justify-center">
+                  <span className="bg-gradient-to-r from-blue-500 to-blue-700 text-white px-4 py-1 rounded-full text-sm font-semibold shadow-lg">
+                    Most Popular
+                  </span>
+                </div>
               )}
+
+              {/* Card */}
+              <div
+                className={`h-full p-8 rounded-2xl bg-gradient-to-b from-gray-800/50 to-gray-900/50 backdrop-blur-sm border ${
+                  index === 1
+                    ? "border-blue-500/50 shadow-2xl shadow-blue-500/20"
+                    : "border-gray-800/50"
+                } flex flex-col`}
+              >
+                {/* Plan Header */}
+                <div className="mb-8">
+                  <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                    {plan.name}
+                  </h2>
+                  <div className="flex items-baseline">
+                    <span className="text-5xl font-bold bg-gradient-to-r from-white to-blue-400 bg-clip-text text-transparent">
+                      ${plan.price}
+                    </span>
+                    {plan.price !== "Custom" && (
+                      <span className="ml-2 text-gray-400">/month</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Features */}
+                <ul className="mb-8 flex-grow space-y-4">
+                  {plan.features.map((feature, featureIndex) => (
+                    <li
+                      key={featureIndex}
+                      className="flex items-start space-x-3 text-gray-300"
+                    >
+                      <div className="flex-shrink-0 w-5 h-5 mt-1">
+                        <div className="w-full h-full rounded-full bg-blue-500/20 flex items-center justify-center">
+                          <CheckIcon className="w-3 h-3 text-blue-400" />
+                        </div>
+                      </div>
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* Action Button */}
+                {plan.name === "Enterprise" ? (
+                  <button
+                    onClick={handleContactUs}
+                    className="w-full px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold hover:from-blue-700 hover:to-blue-800 transform transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+                  >
+                    Contact Us
+                  </button>
+                ) : (
+                  <button
+                    onClick={() =>
+                      plan.priceId && handleSubscribe(plan.priceId)
+                    }
+                    disabled={isLoading || !plan.priceId}
+                    className={`w-full px-6 py-3 rounded-xl font-semibold transition-all duration-200 
+                      ${
+                        index === 1
+                          ? "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
+                          : "bg-white text-gray-900 hover:bg-gray-100"
+                      }
+                      disabled:opacity-50 disabled:cursor-not-allowed
+                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900
+                    `}
+                  >
+                    {loadingPlanId === plan.priceId ? (
+                      <div className="flex items-center justify-center space-x-2">
+                        <svg
+                          className="animate-spin h-5 w-5"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        <span>Processing...</span>
+                      </div>
+                    ) : (
+                      "Choose Plan"
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
           ))}
+        </div>
+
+        {/* FAQ or Additional Info Section */}
+        <div className="mt-20 text-center">
+          <div className="max-w-2xl mx-auto px-4">
+            <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+              Need More Information?
+            </h2>
+            <p className="text-gray-400 mb-6">
+              Our team is here to help you choose the right plan for your needs
+            </p>
+            <button
+              onClick={handleContactUs}
+              className="inline-flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors duration-200"
+            >
+              <span>Contact Support</span>
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M14 5l7 7m0 0l-7 7m7-7H3"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
       </main>
       <Footer />
