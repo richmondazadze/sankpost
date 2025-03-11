@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { FaGithub, FaLinkedin, FaGlobe } from "react-icons/fa";
+import { FaGithub, FaLinkedin, FaGlobe, FaTimes } from "react-icons/fa";
 
 const Footer = () => {
   const [isTermsOpen, setIsTermsOpen] = useState(false);
@@ -19,9 +19,7 @@ const Footer = () => {
     };
 
     document.addEventListener("keydown", handleEscape);
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
-    };
+    return () => document.removeEventListener("keydown", handleEscape);
   }, []);
 
   const Modal = ({ isOpen, onClose, title, content }) => {
@@ -29,80 +27,131 @@ const Footer = () => {
 
     return (
       <div
-        className="fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50 flex items-center justify-center backdrop-blur-sm"
+        className="fixed inset-0 z-50 overflow-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300"
         onClick={onClose}
       >
         <div
-          className="bg-white text-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md mx-4 my-8"
+          className="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-6 shadow-2xl transition-all duration-300 border border-gray-700/50 md:p-8"
           onClick={(e) => e.stopPropagation()}
         >
-          <h2 className="text-2xl font-bold mb-4">{title}</h2>
-          <div className="max-h-[60vh] overflow-y-auto pr-4">{content}</div>
+          {/* Close button */}
           <button
             onClick={onClose}
-            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded transition-colors duration-300 hover:bg-blue-700"
+            className="absolute right-4 top-4 p-2 rounded-full hover:bg-gray-700/50 transition-colors duration-200"
+            aria-label="Close modal"
           >
-            Close
+            <FaTimes className="w-5 h-5 text-gray-400 hover:text-white" />
           </button>
+
+          {/* Modal Header */}
+          <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
+            {title}
+          </h2>
+
+          {/* Modal Content */}
+          <div className="prose prose-invert max-h-[60vh] overflow-y-auto pr-4 custom-scrollbar">
+            {content}
+          </div>
+
+          {/* Modal Footer */}
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={onClose}
+              className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transition-all duration-200 focus:ring-2 focus:ring-blue-500/50 focus:outline-none"
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     );
   };
 
   return (
-    <footer className="bg-gradient-to-br from-gray-800 to-gray-900 text-white py-6">
-      <div className="container mx-auto px-6 flex flex-col items-center space-y-4 sm:flex-row sm:justify-between sm:space-y-0">
-        <div className="flex flex-col items-center space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4">
-          <span className="text-lg font-semibold">
-            Developed by{" "}
-            <b>
-              <em>Richmond Kofi Azadze</em>
-            </b>
-          </span>
-          <div className="flex space-x-4">
-            <a
-              href="https://github.com/richmondazadze"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="transition-transform transform hover:scale-110 border border-white rounded-full p-2"
-            >
-              <FaGithub className="w-6 h-6" />
-            </a>
-            <a
-              href="https://www.linkedin.com/in/richmond-azadze/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="transition-transform transform hover:scale-110 border border-white rounded-full p-2"
-            >
-              <FaLinkedin className="w-6 h-6" />
-            </a>
-            <a
-              href="https://richmondazadze.me/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="transition-transform transform hover:scale-110 border border-white rounded-full p-2"
-            >
-              <FaGlobe className="w-6 h-6" />
-            </a>
+    <footer className="relative mt-20">
+      {/* Gradient divider */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-500/20 to-transparent" />
+
+      <div className="bg-gradient-to-b from-gray-900 to-black text-white py-12">
+        <div className="container mx-auto px-4 max-w-4xl">
+          {/* Main footer content */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8 mb-8">
+            {/* Developer info section */}
+            <div className="flex flex-col items-center md:items-start space-y-4">
+              <div className="text-center md:text-left">
+                <p className="text-sm text-gray-400 tracking-wider mb-1">
+                  <i>Developed By</i>
+                </p>
+                <h3 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
+                  Richmond Kofi Azadze
+                </h3>
+              </div>
+
+              {/* Social links */}
+              <div className="flex space-x-3">
+                {[
+                  {
+                    icon: <FaGithub className="w-5 h-5" />,
+                    href: "https://github.com/richmondazadze",
+                    label: "GitHub",
+                  },
+                  {
+                    icon: <FaLinkedin className="w-5 h-5" />,
+                    href: "https://www.linkedin.com/in/richmond-azadze/",
+                    label: "LinkedIn",
+                  },
+                  {
+                    icon: <FaGlobe className="w-5 h-5" />,
+                    href: "https://richmondazadze.me/",
+                    label: "Portfolio",
+                  },
+                ].map((social) => (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-all duration-300 hover:scale-110"
+                    aria-label={social.label}
+                  >
+                    <div className="text-gray-400 group-hover:text-blue-400 transition-colors duration-300">
+                      {social.icon}
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* Vertical Divider - Only visible on md and up */}
+            <div className="hidden md:block w-px h-16 bg-gradient-to-b from-transparent via-gray-700 to-transparent mx-4" />
+
+            {/* Links section */}
+            <div className="flex flex-col items-center md:items-end space-y-2">
+              <button
+                onClick={toggleTerms}
+                className="text-gray-400 hover:text-blue-400 hover:translate-x-1 transition-all duration-300 text-sm"
+              >
+                Terms & Conditions
+              </button>
+              <button
+                onClick={togglePrivacy}
+                className="text-gray-400 hover:text-blue-400 hover:translate-x-1 transition-all duration-300 text-sm"
+              >
+                Privacy Policy
+              </button>
+            </div>
           </div>
-        </div>
-        <div className="flex space-x-4">
-          <button
-            onClick={toggleTerms}
-            className="text-gray-300 hover:text-white transition-colors duration-300"
-          >
-            Terms and Conditions
-          </button>
-          <span className="text-gray-300">|</span>
-          <button
-            onClick={togglePrivacy}
-            className="text-gray-300 hover:text-white transition-colors duration-300"
-          >
-            Privacy Policy
-          </button>
+
+          {/* Copyright */}
+          <div className="pt-6 border-t border-gray-800/50 text-center">
+            <p className="text-sm text-gray-500">
+              © {new Date().getFullYear()} SankPost AI. All rights reserved.
+            </p>
+          </div>
         </div>
       </div>
 
+      {/* Modals */}
       <Modal
         isOpen={isTermsOpen}
         onClose={toggleTerms}
@@ -186,6 +235,23 @@ const Footer = () => {
           </>
         }
       />
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.3);
+        }
+      `}</style>
     </footer>
   );
 };

@@ -74,65 +74,148 @@ const Modal = ({ isOpen, onClose }) => {
     <>
       {showModal && (
         <div
-          className={`fixed inset-0 flex items-center justify-center transition-opacity duration-300 ${
-            isOpen ? "opacity-100" : "opacity-0"
-          }`}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
+          onClick={handleClose}
         >
-          <div className="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md m-4 transition-transform duration-300 transform scale-100">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">Contact Us</h2>
-              <button
-                onClick={handleClose}
-                className="text-gray-600 hover:text-gray-800 transition duration-300 ease-in-out"
-              >
-                <X size={24} />
-              </button>
+          <div
+            className="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6 text-left shadow-xl transition-all duration-300 border border-gray-700/50 md:p-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button - Positioned absolutely */}
+            <button
+              onClick={handleClose}
+              className="absolute right-4 top-4 rounded-full p-2 text-gray-400 hover:bg-gray-800/50 hover:text-white transition-colors duration-200"
+              aria-label="Close modal"
+            >
+              <X size={20} />
+            </button>
+
+            {/* Header */}
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
+                Contact Us
+              </h2>
+              <p className="mt-2 text-sm text-gray-400">
+                Fill out the form below and we'll get back to you shortly
+              </p>
             </div>
 
+            {/* Form */}
             <form
               action="https://formspree.io/f/xleqklkl"
               method="post"
-              // onSubmit={handleSubmit}
-              className="space-y-6 bg-gradient-to-r from-gray-800 to-gray-300 p-4 rounded-lg shadow-lg"
+              className="space-y-4"
             >
-              <input
-                type="text"
-                name="name"
-                id="name"
-                placeholder="Your Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
-              />
-              <input
-                type="email"
-                name="email"
-                id="email"
-                placeholder="Your Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
-              />
-              <textarea
-                placeholder="Requesting custom or premium subscription"
-                value={message || "Requesting custom or premium subscription"}
-                onChange={(e) => setMessage(e.target.value)}
-                name="message"
-                id="message"
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
-                rows="4"
-              />
+              {/* Name Input */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="name"
+                  className="text-sm font-medium text-gray-300"
+                >
+                  Name
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  id="name"
+                  placeholder="Enter your name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all duration-200"
+                />
+              </div>
+
+              {/* Email Input */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="email"
+                  className="text-sm font-medium text-gray-300"
+                >
+                  Email
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  id="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all duration-200"
+                />
+              </div>
+
+              {/* Message Textarea */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="message"
+                  className="text-sm font-medium text-gray-300"
+                >
+                  Message
+                </label>
+                <textarea
+                  name="message"
+                  id="message"
+                  placeholder="Tell us what you're looking for"
+                  value={message || "Requesting custom or premium subscription"}
+                  onChange={(e) => setMessage(e.target.value)}
+                  required
+                  rows="4"
+                  className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all duration-200 resize-none"
+                />
+              </div>
+
+              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={isSending}
-                className="w-full px-6 py-3 bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-300 ease-in-out"
+                className="w-full mt-6 relative inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg shadow-lg hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-200 group disabled:opacity-70"
               >
-                {isSending ? "Sending..." : "Send Message"}
+                {isSending ? (
+                  <span className="flex items-center space-x-2">
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    <span>Sending...</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center space-x-2">
+                    <span>Send Message</span>
+                    <svg
+                      className="w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-200"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M14 5l7 7m0 0l-7 7m7-7H3"
+                      />
+                    </svg>
+                  </span>
+                )}
               </button>
             </form>
+
+            <div className="text-center text-xs text-gray-500 mt-4">
+              Your information is secure and will never be shared.
+            </div>
           </div>
         </div>
       )}
