@@ -9,63 +9,84 @@ import {
   ArrowRight,
 } from "lucide-react";
 import "./TwitterMock.css";
-import ReactMarkdown from "react-markdown";
-import rehypeRaw from "rehype-raw";
 
 export const TwitterMock = ({ content }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const nextTweet = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % content.length);
-  };
+  // Ensure content is an array of strings
+  const tweets = Array.isArray(content) ? content : [content];
+  const currentTweet = tweets[currentIndex];
 
-  const prevTweet = () => {
-    setCurrentIndex(
-      (prevIndex) => (prevIndex - 1 + content.length) % content.length
-    );
-  };
+  if (!tweets.length) return null;
 
   return (
-    <div className="flex items-center justify-between max-w-md mx-auto overflow-hidden">
-      <button
-        onClick={prevTweet}
-        disabled={content.length <= 1}
-        className="arrow-button"
-      >
-        <ArrowLeft size={24} />
-      </button>
-      <div className="flex-1 mx-2 relative">
-        <div className="bg-white text-black rounded-lg p-4 w-full">
-          <div className="mb-8">
-            <div className="flex items-center mb-3">
-              <div className="w-12 h-12 bg-gray-300 rounded-full mr-3"></div>
-              <div>
-                <p className="font-bold">Your Name</p>
-                <p className="text-gray-500">@yourhandle</p>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-sm text-gray-400">
+          Post {currentIndex + 1} of {tweets.length}
+        </span>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => setCurrentIndex((prev) => prev - 1)}
+          disabled={currentIndex === 0}
+          className="p-2 rounded-full hover:bg-gray-700/50 transition-colors disabled:opacity-50"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+
+        <div className="flex-1 mx-4 max-w-[500px] w-full mx-auto">
+          <div className="bg-black border border-gray-800 rounded-xl p-4">
+            <div className="flex items-start mb-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-gray-900 rounded-full mr-3 flex items-center justify-center flex-shrink-0">
+                <svg
+                  className="w-5 h-5 text-white"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  fill="currentColor"
+                >
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-white">Your Brand</p>
+                <p className="text-gray-500 text-sm">@yourbrand</p>
               </div>
             </div>
-            <ReactMarkdown
-              className="prose prose-invert max-w-none text-sm"
-              rehypePlugins={[rehypeRaw]}
-            >
-              {content[currentIndex]}
-            </ReactMarkdown>
-            <div className="flex justify-between mt-3 text-gray-500">
-              <MessageCircle size={18} />
-              <Repeat size={18} />
-              <Heart size={18} />
-              <Share size={18} />
+
+            <p className="text-[15px] leading-normal text-white mb-4 whitespace-pre-line">
+              {currentTweet}
+            </p>
+
+            <div className="flex justify-between text-gray-500 max-w-[425px]">
+              <button className="hover:text-blue-400 transition-colors flex items-center gap-2">
+                <MessageCircle className="w-4 h-4" />
+                <span className="text-xs">0</span>
+              </button>
+              <button className="hover:text-green-400 transition-colors flex items-center gap-2">
+                <Repeat className="w-4 h-4" />
+                <span className="text-xs">0</span>
+              </button>
+              <button className="hover:text-pink-600 transition-colors flex items-center gap-2">
+                <Heart className="w-4 h-4" />
+                <span className="text-xs">0</span>
+              </button>
+              <button className="hover:text-blue-400 transition-colors">
+                <Share className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>
+
+        <button
+          onClick={() => setCurrentIndex((prev) => prev + 1)}
+          disabled={currentIndex === tweets.length - 1}
+          className="p-2 rounded-full hover:bg-gray-700/50 transition-colors disabled:opacity-50"
+        >
+          <ArrowRight className="w-5 h-5" />
+        </button>
       </div>
-      <button
-        onClick={nextTweet}
-        disabled={content.length <= 1}
-        className="arrow-button"
-      >
-        <ArrowRight size={24} />
-      </button>
     </div>
   );
 };
