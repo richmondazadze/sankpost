@@ -36,7 +36,7 @@ export const TwitterMock = ({ content }) => {
           <ArrowLeft className="w-5 h-5" />
         </button>
 
-        <div className="flex-1 mx-4 max-w-[500px] w-full mx-auto">
+        <div className="flex-1 max-w-[500px] w-full mx-auto">
           <div className="bg-black border border-gray-800 rounded-xl p-4">
             <div className="flex items-start mb-3">
               <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-gray-900 rounded-full mr-3 flex items-center justify-center flex-shrink-0">
