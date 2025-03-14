@@ -9,6 +9,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import "./TwitterMock.css";
+import { CopyButton } from "./CopyButton";
 
 export const TwitterMock = ({ content }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -21,10 +22,11 @@ export const TwitterMock = ({ content }) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex justify-between items-center mb-2">
         <span className="text-sm text-gray-400">
-          Post {currentIndex + 1} of {tweets.length}
+          Tweet {currentIndex + 1} of {tweets.length}
         </span>
+        <CopyButton text={currentTweet} label="Copy tweet" />
       </div>
 
       <div className="flex items-center justify-between">

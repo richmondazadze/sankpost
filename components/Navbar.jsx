@@ -44,14 +44,16 @@ export function Navbar() {
       <nav className="container mx-auto px-4 lg:px-8">
         <div className="flex flex-wrap justify-between items-center h-16 md:h-20">
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-3 group">
-              <div className="relative">
-                <MessageSquare className="w-8 h-8 md:w-10 md:h-10 text-blue-500 transition-transform duration-300 group-hover:scale-110" />
-                <div className="absolute inset-0 bg-blue-500/20 rounded-lg blur-xl transition-all duration-300 group-hover:blur-2xl" />
+            <Link href="/" className="flex items-center space-x-3">
+              <div className="relative group">
+                <span className="absolute -inset-2 bg-gradient-to-r from-purple-600 to-blue-500 rounded-lg blur opacity-25 group-hover:opacity-75 transition duration-200"></span>
+                <div className="relative flex items-center">
+                  <MessageSquare className="w-8 h-8 md:w-10 md:h-10 text-blue-500 transition-transform duration-300 group-hover:scale-110" />
+                  <h1 className="ml-3 text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-blue-300 hover:from-blue-200 hover:via-blue-400 hover:to-purple-400 transition-all duration-300">
+                    Sankpost <span className="font-light">AI</span>
+                  </h1>
+                </div>
               </div>
-              <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                SankPost AI
-              </span>
             </Link>
           </div>
 

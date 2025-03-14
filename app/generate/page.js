@@ -24,6 +24,7 @@ import {
   Clock,
   Zap,
   X,
+  Check,
 } from "lucide-react";
 import { GoogleGenerativeAI, Part } from "@google/generative-ai";
 import ReactMarkdown from "react-markdown";
@@ -88,18 +89,20 @@ TWEET4: Fourth complete tweet here`,
 
   instagram: (
     basePrompt
-  ) => `Create one perfect Instagram caption for: "${basePrompt}"
+  ) => `Generate an engaging Instagram caption for this image about: "${basePrompt}"
 
-The caption should:
-- Start with a strong hook
-- Use strategic line breaks for readability
-- Include 3-5 relevant emojis
-- Add 5-7 targeted hashtags at the end
-- Be visually formatted with markdown
-- Include a clear call-to-action
-- Maximum 2200 characters
+Rules:
+- Create a captivating, ready-to-use caption
+- Keep it authentic and engaging
+- Include 3-4 relevant hashtags
+- Maximum length: 2200 characters
+- DO NOT include any analysis text or meta descriptions
+- DO NOT start with image descriptions
+- Focus on creating ONE clear, usable caption
 
-Format with proper spacing and sections.`,
+Format the response EXACTLY like this:
+CAPTION: [The actual caption text here]
+HASHTAGS: [hashtags here]`,
 
   linkedin: (
     basePrompt
@@ -117,6 +120,35 @@ The post should:
 Format with proper paragraph spacing and professional structure.`,
 };
 
+// Add this helper function at the top of the file
+const fileToGenerativePart = async (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      // Remove the "data:image/jpeg;base64," prefix to get just the base64 data
+      const base64Data = reader.result.split(",")[1];
+      resolve({
+        inlineData: {
+          data: base64Data,
+          mimeType: file.type,
+        },
+      });
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
+const processInstagramContent = (content) => {
+  const captionMatch = content.match(/CAPTION: ([\s\S]*?)(?=HASHTAGS:|$)/);
+  const hashtagsMatch = content.match(/HASHTAGS: ([\s\S]*?)$/);
+
+  const caption = captionMatch ? captionMatch[1].trim() : "";
+  const hashtags = hashtagsMatch ? hashtagsMatch[1].trim() : "";
+
+  return caption + "\n\n" + hashtags;
+};
+
 export default function GenerateContent() {
   const { isLoaded, isSignedIn, user } = useUser();
   const router = useRouter();
@@ -130,6 +162,7 @@ export default function GenerateContent() {
   const [history, setHistory] = useState([]);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [copyStatus, setCopyStatus] = useState({});
 
   const fetchUserPoints = useCallback(async () => {
     if (user?.id) {
@@ -190,8 +223,25 @@ export default function GenerateContent() {
     setIsLoading(true);
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-      const promptText = platformPrompts[contentType](prompt);
-      const result = await model.generateContent([{ text: promptText }]);
+
+      if (contentType === "instagram" && !image) {
+        alert("Please upload an image for Instagram content");
+        setIsLoading(false);
+        return;
+      }
+
+      let result;
+      if (contentType === "instagram") {
+        // Process image for Instagram
+        const imagePart = await fileToGenerativePart(image);
+        const promptText = platformPrompts[contentType](prompt);
+        result = await model.generateContent([{ text: promptText }, imagePart]);
+      } else {
+        // Handle other content types as before
+        const promptText = platformPrompts[contentType](prompt);
+        result = await model.generateContent([{ text: promptText }]);
+      }
+
       const generatedText = result.response.text();
 
       if (contentType === "twitter") {
@@ -215,7 +265,6 @@ export default function GenerateContent() {
           setHistory((prevHistory) => [savedContent, ...prevHistory]);
         }
       } else {
-        // Handle other content types...
         setGeneratedContent([generatedText.trim()]);
 
         const savedContent = await saveGeneratedContent(
@@ -269,23 +318,36 @@ export default function GenerateContent() {
     }
   };
 
-  const copyToClipboard = (text) => {
+  const copyToClipboard = (text, id = "default") => {
     navigator.clipboard.writeText(text);
+    setCopyStatus((prev) => ({ ...prev, [id]: true }));
+
+    // Reset the icon after 2 seconds
+    setTimeout(() => {
+      setCopyStatus((prev) => ({ ...prev, [id]: false }));
+    }, 2000);
   };
 
-  const renderContentMock = () => {
-    if (generatedContent.length === 0) return null;
+  const renderContent = () => {
+    if (!generatedContent.length) return null;
 
-    switch (contentType) {
-      case "twitter":
-        return <TwitterMock content={generatedContent} />;
-      case "instagram":
-        return <InstagramMock content={generatedContent[0]} image={image} />;
-      case "linkedin":
-        return <LinkedInMock content={generatedContent[0]} />;
-      default:
-        return null;
-    }
+    return (
+      <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-xl p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-white">Preview</h3>
+        </div>
+        {contentType === "twitter" ? (
+          <TwitterMock content={generatedContent} />
+        ) : contentType === "instagram" ? (
+          <InstagramMock
+            content={processInstagramContent(generatedContent[0])}
+            image={image}
+          />
+        ) : contentType === "linkedin" ? (
+          <LinkedInMock content={generatedContent[0]} />
+        ) : null}
+      </div>
+    );
   };
 
   const toggleModal = () => {
@@ -476,29 +538,27 @@ export default function GenerateContent() {
                 </div>
 
                 {contentType === "instagram" && (
-                  <div className="relative">
-                    <label className="block text-sm font-medium mb-2 text-gray-300">
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
                       Upload Image
                     </label>
-                    <div className="flex items-center space-x-3">
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                        id="image-upload"
-                      />
-                      <label
-                        htmlFor="image-upload"
-                        className="group cursor-pointer flex items-center justify-center px-4 py-2 bg-gray-700/50 border border-gray-600/30 rounded-xl text-sm font-medium hover:bg-gray-600/50 hover:border-gray-500/50 transition-all duration-300"
-                      >
-                        <Upload className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-                        <span>Upload Image</span>
-                      </label>
-                      <span className="text-sm text-gray-400">
-                        {image ? image.name : "No image selected"}
-                      </span>
-                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="block w-full text-sm text-gray-400
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-blue-500 file:text-white
+                        hover:file:bg-blue-600
+                        file:cursor-pointer"
+                    />
+                    {image && (
+                      <p className="mt-2 text-sm text-gray-400">
+                        Selected: {image.name}
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -532,67 +592,16 @@ export default function GenerateContent() {
               </div>
             </div>
 
-            {/* Generated Content Display */}
-            {(selectedHistoryItem || generatedContent.length > 0) && (
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-xl blur-xl" />
-                <div className="relative bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 p-6 rounded-xl space-y-4">
-                  <h2 className="text-2xl font-semibold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                    {selectedHistoryItem ? "History Item" : "Generated Content"}
-                  </h2>
-
-                  {contentType === "twitter" ? (
-                    <div className="space-y-4">
-                      {(selectedHistoryItem
-                        ? JSON.parse(selectedHistoryItem.content)
-                        : generatedContent
-                      ).map((tweet, index) => (
-                        <div
-                          key={index}
-                          className="group relative bg-gray-700/50 backdrop-blur-sm border border-gray-600/30 p-4 rounded-xl hover:border-blue-500/30 transition-all duration-300"
-                        >
-                          <p className="text-white mb-2">{tweet}</p>
-                          <div className="flex justify-between items-center text-gray-400 text-xs mt-2">
-                            <span className="px-2 py-1 rounded-lg bg-gray-600/50">
-                              {tweet.length}/{MAX_TWEET_LENGTH}
-                            </span>
-                            <Button
-                              onClick={() => copyToClipboard(tweet)}
-                              className="group p-2 rounded-lg bg-gray-600/50 hover:bg-gray-500/50 text-white transition-all duration-300 hover:scale-105"
-                            >
-                              <Copy className="h-4 w-4 group-hover:text-blue-400 transition-colors" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="bg-gray-700/50 backdrop-blur-sm border border-gray-600/30 p-4 rounded-xl hover:border-blue-500/30 transition-all duration-300">
-                      <p className="text-white">
-                        {selectedHistoryItem
-                          ? selectedHistoryItem.content
-                          : generatedContent[0]}
-                      </p>
-                    </div>
-                  )}
+            {/* Single content display section */}
+            <div className="mt-8">
+              {isLoading ? (
+                <div className="flex items-center justify-center p-8">
+                  <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
-              </div>
-            )}
-
-            {/* Preview Section */}
-            {generatedContent.length > 0 && (
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl blur-xl" />
-                <div className="relative bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 p-6 rounded-xl transition-all duration-300 hover:border-gray-600/50">
-                  <h2 className="text-2xl font-semibold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4">
-                    Preview
-                  </h2>
-                  <div className="transform transition-all duration-300 hover:scale-[1.01]">
-                    {renderContentMock()}
-                  </div>
-                </div>
-              </div>
-            )}
+              ) : (
+                renderContent()
+              )}
+            </div>
           </div>
         </div>
 
