@@ -44,7 +44,8 @@ const contentTypes = [
 
 const MAX_TWEET_LENGTH = 280;
 const POINTS_PER_GENERATION = 5;
-const MAX_IMAGE_BYTES = 2_000_000; // ~2MB cap for data URL payloads
+// Increased to 6MB raw file size (~8MB base64 in JSON). For larger images, prefer URL uploads.
+const MAX_IMAGE_BYTES = 6_000_000;
 
 // Define HistoryItem as a plain object structure
 const HistoryItem = {
