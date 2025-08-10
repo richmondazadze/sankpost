@@ -13,7 +13,6 @@
   "dependencies": {
     "@clerk/nextjs": "^6.1.0",
     "@clerk/themes": "^2.1.40",
-    "@google/generative-ai": "^0.21.0",
     "@neondatabase/serverless": "^0.10.4",
     "@nextui-org/card": "^2.0.34",
     "@nextui-org/input": "^2.2.5",
@@ -35,10 +34,12 @@
     "remark-gfm": "^4.0.1",
     "resend": "^4.1.2",
     "stripe": "^17.4.0",
-    "svix": "^1.37.0"
+    "svix": "^1.37.0",
+    "@stripe/stripe-js": "^5.2.0",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.5.2"
   },
   "devDependencies": {
-    "@stripe/stripe-js": "^5.2.0",
     "@types/pg": "^8.11.10",
     "@types/react": "18.3.12",
     "drizzle-kit": "^0.27.1",

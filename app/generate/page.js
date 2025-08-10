@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@nextui-org/react";
-import { Input } from "@nextui-org/react";
+// import { Input } from "@nextui-org/react";
 import { Textarea } from "@nextui-org/react";
 import {
   Select,
@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 
-import rehypeRaw from "rehype-raw";
+// import rehypeRaw from "rehype-raw";
 
 import {
   Loader2,
@@ -26,8 +26,7 @@ import {
   X,
   Check,
 } from "lucide-react";
-import { GoogleGenerativeAI, Part } from "@google/generative-ai";
-import ReactMarkdown from "react-markdown";
+// import ReactMarkdown from "react-markdown";
 import { Navbar } from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import { SignIn, SignUp, useUser } from "@clerk/nextjs";
@@ -44,8 +43,7 @@ import { InstagramMock } from "../../components/social-mocks/InstagramMock";
 import { LinkedInMock } from "../../components/social-mocks/LinkedInMock";
 import Link from "next/link";
 
-const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
+// Switched to OpenRouter server route; no direct SDK on client
 
 const contentTypes = [
   { value: "twitter", label: "X (Twitter)" },
@@ -55,6 +53,7 @@ const contentTypes = [
 
 const MAX_TWEET_LENGTH = 280;
 const POINTS_PER_GENERATION = 5;
+const MAX_IMAGE_BYTES = 2_000_000; // ~2MB cap for data URL payloads
 
 // Define HistoryItem as a plain object structure
 const HistoryItem = {
@@ -120,24 +119,14 @@ The post should:
 Format with proper paragraph spacing and professional structure.`,
 };
 
-// Add this helper function at the top of the file
-const fileToGenerativePart = async (file) => {
-  return new Promise((resolve, reject) => {
+// Convert a File to a data URL for OpenRouter image_url content
+const fileToDataUrl = async (file) =>
+  new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onloadend = () => {
-      // Remove the "data:image/jpeg;base64," prefix to get just the base64 data
-      const base64Data = reader.result.split(",")[1];
-      resolve({
-        inlineData: {
-          data: base64Data,
-          mimeType: file.type,
-        },
-      });
-    };
+    reader.onloadend = () => resolve(reader.result);
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
-};
 
 const processInstagramContent = (content) => {
   const captionMatch = content.match(/CAPTION: ([\s\S]*?)(?=HASHTAGS:|$)/);
@@ -210,86 +199,76 @@ export default function GenerateContent() {
   ]);
 
   const handleGenerate = async () => {
-    if (
-      !genAI ||
-      !user?.id ||
-      userPoints === null ||
-      userPoints < POINTS_PER_GENERATION
-    ) {
-      alert("Not enough points or API key not set.");
+    if (!user?.id || userPoints === null || userPoints < POINTS_PER_GENERATION) {
+      alert("Not enough points.");
       return;
     }
 
     setIsLoading(true);
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-
       if (contentType === "instagram" && !image) {
         alert("Please upload an image for Instagram content");
         setIsLoading(false);
         return;
       }
 
-      let result;
-      if (contentType === "instagram") {
-        // Process image for Instagram
-        const imagePart = await fileToGenerativePart(image);
-        const promptText = platformPrompts[contentType](prompt);
-        result = await model.generateContent([{ text: promptText }, imagePart]);
-      } else {
-        // Handle other content types as before
-        const promptText = platformPrompts[contentType](prompt);
-        result = await model.generateContent([{ text: promptText }]);
+      const promptText = platformPrompts[contentType](prompt);
+      const imageDataUrl =
+        contentType === "instagram" && image
+          ? await fileToDataUrl(image)
+          : null;
+
+      const res = await fetch("/api/openrouter-generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: promptText,
+          imageDataUrl,
+          model: "google/gemini-2.0-flash-exp:free",
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err);
       }
 
-      const generatedText = result.response.text();
+      const { text } = await res.json();
 
       if (contentType === "twitter") {
-        // Split into individual tweets
-        const tweets = generatedText
+        const tweets = text
           .split(/TWEET\d+:\s*/)
           .filter((tweet) => tweet.trim())
           .map((tweet) => tweet.trim());
-
         setGeneratedContent(tweets);
 
-        // Save content
         const savedContent = await saveGeneratedContent(
           user.id,
           JSON.stringify(tweets),
           prompt,
           contentType
         );
-
-        if (savedContent) {
-          setHistory((prevHistory) => [savedContent, ...prevHistory]);
-        }
+        if (savedContent) setHistory((prev) => [savedContent, ...prev]);
       } else {
-        setGeneratedContent([generatedText.trim()]);
-
+        const cleaned = (text || "").trim();
+        setGeneratedContent([cleaned]);
         const savedContent = await saveGeneratedContent(
           user.id,
-          generatedText.trim(),
+          cleaned,
           prompt,
           contentType
         );
-
-        if (savedContent) {
-          setHistory((prevHistory) => [savedContent, ...prevHistory]);
-        }
+        if (savedContent) setHistory((prev) => [savedContent, ...prev]);
       }
 
-      // Update points
       const updatedUser = await updateUserPoints(
         user.id,
         -POINTS_PER_GENERATION
       );
-      if (updatedUser) {
-        setUserPoints(updatedUser.points);
-      }
+      if (updatedUser) setUserPoints(updatedUser.points);
     } catch (error) {
       console.error("Generation error:", error);
-      setGeneratedContent(["An error occurred: " + error.message]);
+      setGeneratedContent(["An error occurred: " + (error.message || "Unknown error")]);
     } finally {
       setIsLoading(false);
     }
@@ -366,7 +345,12 @@ export default function GenerateContent() {
 
   const handleImageUpload = (event) => {
     if (event.target.files && event.target.files[0]) {
-      setImage(event.target.files[0]);
+      const file = event.target.files[0];
+      if (file.size > MAX_IMAGE_BYTES) {
+        alert("Image too large. Please upload an image under 2MB.");
+        return;
+      }
+      setImage(file);
     }
   };
 

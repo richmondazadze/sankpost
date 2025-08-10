@@ -16,7 +16,7 @@ SankPost AI is a powerful AI-powered platform that helps you create engaging con
 - [Next.js](https://nextjs.org) - React framework for production
 - [Tailwind CSS](https://tailwindcss.com) - For styling
 - [Vercel](https://vercel.com) - For deployment
-- AI Integration for content generation
+- AI Integration via OpenRouter (server-proxied)
 - Stripe for payment processing
 
 ## Live Application
