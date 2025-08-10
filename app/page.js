@@ -27,7 +27,7 @@ export default async function Home() {
       <Navbar />
 
       {/* Hero Section */}
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 relative pt-20">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-20 left-10 animate-float">

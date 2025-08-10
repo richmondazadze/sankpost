@@ -14,20 +14,11 @@ import {
 
 // import rehypeRaw from "rehype-raw";
 
-import {
-  Loader2,
-  Upload,
-  Copy,
-  Twitter,
-  Instagram,
-  Linkedin,
-  Clock,
-  Zap,
-  X,
-  Check,
-} from "lucide-react";
+import { Loader2, Upload, Copy, Twitter, Instagram, Linkedin, Zap, X, Check, Clock } from "lucide-react";
 // import ReactMarkdown from "react-markdown";
 import { Navbar } from "../../components/Navbar";
+import Sidebar from "../../components/Sidebar";
+import { toast } from "sonner";
 import Footer from "../../components/Footer";
 import { SignIn, SignUp, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
@@ -149,35 +140,37 @@ export default function GenerateContent() {
   const [image, setImage] = useState(null);
   const [userPoints, setUserPoints] = useState(null);
   const [history, setHistory] = useState([]);
-  const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [copyStatus, setCopyStatus] = useState({});
+  const [isPointsLoading, setIsPointsLoading] = useState(false);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [tone, setTone] = useState("neutral"); // neutral | friendly | formal | persuasive
+  const [lengthPref, setLengthPref] = useState("medium"); // short | medium | long
 
   const fetchUserPoints = useCallback(async () => {
     if (user?.id) {
-      console.log("Fetching points for user:", user.id);
+      setIsPointsLoading(true);
       const points = await getUserPoints(user.id);
-      console.log("Fetched points:", points);
       setUserPoints(points);
       if (points === 0) {
-        console.log("User has 0 points. Attempting to create/update user.");
         const updatedUser = await createOrUpdateUser(
           user.id,
           user.emailAddresses[0].emailAddress,
           user.fullName || ""
         );
-        console.log("Updated user:", updatedUser);
         if (updatedUser) {
           setUserPoints(updatedUser.points);
         }
       }
+      setIsPointsLoading(false);
     }
   }, [user]);
 
   const fetchContentHistory = useCallback(async () => {
     if (user?.id) {
+      setIsHistoryLoading(true);
       const contentHistory = await getGeneratedContentHistory(user.id);
       setHistory(contentHistory);
+      setIsHistoryLoading(false);
     }
   }, [user]);
 
@@ -185,7 +178,6 @@ export default function GenerateContent() {
     if (isLoaded && !isSignedIn) {
       router.push("/");
     } else if (isSignedIn && user) {
-      console.log("User loaded:", user);
       fetchUserPoints();
       fetchContentHistory();
     }
@@ -212,7 +204,23 @@ export default function GenerateContent() {
         return;
       }
 
-      const promptText = platformPrompts[contentType](prompt);
+      const toneInstruction =
+        tone === "neutral"
+          ? ""
+          : tone === "friendly"
+          ? "\n- Use a friendly, approachable tone"
+          : tone === "formal"
+          ? "\n- Use a concise, formal tone"
+          : "\n- Use a persuasive, marketing-ready tone";
+
+      const lengthInstruction =
+        lengthPref === "short"
+          ? "\n- Keep the content concise"
+          : lengthPref === "long"
+          ? "\n- Provide more detail where helpful"
+          : "";
+
+      const promptText = platformPrompts[contentType](prompt) + toneInstruction + lengthInstruction;
       const imageDataUrl =
         contentType === "instagram" && image
           ? await fileToDataUrl(image)
@@ -247,7 +255,10 @@ export default function GenerateContent() {
           prompt,
           contentType
         );
-        if (savedContent) setHistory((prev) => [savedContent, ...prev]);
+        if (savedContent) {
+          setHistory((prev) => [savedContent, ...prev]);
+          toast.success("Saved generated tweets to history");
+        }
       } else {
         const cleaned = (text || "").trim();
         setGeneratedContent([cleaned]);
@@ -257,7 +268,10 @@ export default function GenerateContent() {
           prompt,
           contentType
         );
-        if (savedContent) setHistory((prev) => [savedContent, ...prev]);
+        if (savedContent) {
+          setHistory((prev) => [savedContent, ...prev]);
+          toast.success("Saved generated content to history");
+        }
       }
 
       const updatedUser = await updateUserPoints(
@@ -268,33 +282,13 @@ export default function GenerateContent() {
     } catch (error) {
       console.error("Generation error:", error);
       setGeneratedContent(["An error occurred: " + (error.message || "Unknown error")]);
+      toast.error("Generation failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleHistoryItemClick = (item) => {
-    setSelectedHistoryItem(item);
-    setContentType(item.contentType);
-    setPrompt(item.prompt);
-
-    if (item.contentType === "twitter") {
-      try {
-        const parsedContent = JSON.parse(item.content);
-        setGeneratedContent(
-          Array.isArray(parsedContent) ? parsedContent : [[item.content]]
-        );
-      } catch (e) {
-        // Fallback for older content format
-        const tweets = item.content
-          .split("\n\n")
-          .filter((tweet) => tweet.trim());
-        setGeneratedContent([tweets]);
-      }
-    } else {
-      setGeneratedContent([item.content]);
-    }
-  };
+  // History interactions moved to /history page
 
   const copyToClipboard = (text, id = "default") => {
     navigator.clipboard.writeText(text);
@@ -328,9 +322,7 @@ export default function GenerateContent() {
     );
   };
 
-  const toggleModal = () => {
-    setIsModalOpen((prev) => !prev);
-  };
+  // mobile history drawer removed; view full history on /history
 
   // if (isLoading) {
   //   return (
@@ -356,57 +348,29 @@ export default function GenerateContent() {
   return (
     <div className="bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-900 via-black to-gray-950 min-h-screen text-white">
       <Navbar />
+      {/* Spacer equal to navbar height */}
+      <div className="h-16 md:h-20" aria-hidden />
 
-      <div className="container mx-auto px-4 mb-8 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 mt-14 lg:grid-cols-3 gap-8">
-          {/* Left Sidebar - History */}
+      <div className="mx-auto mb-8 pt-4 grid max-w-[1400px] grid-cols-1 gap-6 px-4 sm:px-6 lg:grid-cols-[auto_1fr] lg:px-8">
+        {/* Persistent Sidebar on lg+ */}
+        <Sidebar />
+
+        <div className="grid grid-cols-1 gap-6">
+          {/* Compact link to full history */}
           <div className="hidden lg:block">
-            <div className="lg:col-span-1 bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-xl p-6 h-[calc(100vh-12rem)] overflow-y-auto transition-all duration-300 hover:border-gray-600/50">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-semibold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                  History
-                </h2>
-                <Clock className="h-6 w-6 text-blue-400" />
+            <div className="rounded-xl border border-gray-700/50 bg-gray-800/40 p-4 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-gray-300">
+                <Clock className="h-4 w-4 text-blue-400" />
+                <span className="text-sm">Browse your past generations</span>
               </div>
-
-              <div className="space-y-4">
-                {history.map((item) => (
-                  <div
-                    key={item.id}
-                    className="group p-4 bg-gray-800/50 backdrop-blur-sm border border-gray-700/30 rounded-xl hover:bg-gray-700/50 transition-all duration-300 cursor-pointer hover:border-blue-500/30 hover:shadow-[0_0_15px_rgba(59,130,246,0.1)]"
-                    onClick={() => handleHistoryItemClick(item)}
-                  >
-                    <div className="flex items-center mb-2">
-                      <div className="p-2 rounded-lg bg-gray-700/50 group-hover:bg-gray-600/50 transition-colors">
-                        {item.contentType === "twitter" && (
-                          <Twitter className="h-4 w-4 text-blue-400" />
-                        )}
-                        {item.contentType === "instagram" && (
-                          <Instagram className="h-4 w-4 text-pink-400" />
-                        )}
-                        {item.contentType === "linkedin" && (
-                          <Linkedin className="h-4 w-4 text-blue-600" />
-                        )}
-                      </div>
-                      <span className="ml-2 text-sm font-medium text-gray-300 group-hover:text-white transition-colors">
-                        {item.contentType}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-400 group-hover:text-gray-200 transition-colors truncate">
-                      {item.prompt}
-                    </p>
-                    <div className="flex items-center text-xs text-gray-500 mt-2 group-hover:text-gray-400 transition-colors">
-                      <Clock className="mr-1 h-3 w-3" />
-                      {new Date(item.createdAt).toLocaleString()}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <Button as={Link} href="/history" className="bg-blue-600 text-white px-4 py-2 rounded-md">
+                View History
+              </Button>
             </div>
           </div>
 
           {/* Main Content Area */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-6">
             {/* Points Display */}
             <div className="relative group">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl blur-xl transition-all duration-300 group-hover:blur-2xl" />
@@ -419,7 +383,7 @@ export default function GenerateContent() {
                   <div className="ml-3">
                     <p className="text-sm text-gray-400">Available Points</p>
                     <p className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
-                      {userPoints !== null ? userPoints : "Loading..."}
+                      {isPointsLoading ? "…" : userPoints}
                     </p>
                   </div>
                 </div>
@@ -446,7 +410,6 @@ export default function GenerateContent() {
                     onClick={() => {
                       setPrompt("");
                       setGeneratedContent([]);
-                      setSelectedHistoryItem(null);
                       setImage(null);
                     }}
                     className="px-4 py-2 rounded-lg bg-gray-700/50 text-sm text-gray-300 hover:bg-gray-600/50 transition-all duration-300 hover:text-white border border-gray-600/30 hover:border-gray-500/50"
@@ -460,7 +423,6 @@ export default function GenerateContent() {
                     setContentType(value);
                     setPrompt("");
                     setGeneratedContent([]);
-                    setSelectedHistoryItem(null);
                   }}
                   defaultValue={contentType}
                 >
@@ -498,6 +460,7 @@ export default function GenerateContent() {
                     Prompt <span className="text-red-400">*</span>
                   </label>
                   <Textarea
+            id="prompt-input"
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     placeholder="Enter your prompt here..."
@@ -518,6 +481,39 @@ export default function GenerateContent() {
                       Please enter a prompt to generate content
                     </p>
                   )}
+                </div>
+
+                {/* Tone and length controls */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-300">
+                      Tone
+                    </label>
+                    <select
+                      value={tone}
+                      onChange={(e) => setTone(e.target.value)}
+                      className="w-full rounded-md border border-gray-600/40 bg-gray-800/60 px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                    >
+                      <option value="neutral">Neutral</option>
+                      <option value="friendly">Friendly</option>
+                      <option value="formal">Formal</option>
+                      <option value="persuasive">Persuasive</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-300">
+                      Length
+                    </label>
+                    <select
+                      value={lengthPref}
+                      onChange={(e) => setLengthPref(e.target.value)}
+                      className="w-full rounded-md border border-gray-600/40 bg-gray-800/60 px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                    >
+                      <option value="short">Short</option>
+                      <option value="medium">Medium</option>
+                      <option value="long">Long</option>
+                    </select>
+                  </div>
                 </div>
 
                 {contentType === "instagram" && (
@@ -546,6 +542,7 @@ export default function GenerateContent() {
                 )}
 
                 <Button
+                  id="generate-btn"
                   onClick={handleGenerate}
                   disabled={
                     isLoading ||
@@ -588,75 +585,18 @@ export default function GenerateContent() {
           </div>
         </div>
 
-        {/* Mobile History Button */}
-        <button
-          onClick={toggleModal}
-          className="fixed bottom-4 right-4 p-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full shadow-lg hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] transition-all duration-300 lg:hidden hover:scale-110 z-50"
+        {/* Mobile History CTA */}
+        <Link
+          href="/history"
+          className="fixed bottom-20 right-4 p-3 rounded-full bg-blue-600 text-white lg:hidden shadow-lg hover:bg-blue-700 z-[90]"
+          aria-label="View history"
         >
-          <Clock className="h-6 w-6 text-white" />
-        </button>
-
-        {/* Mobile History Modal */}
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden">
-            <div
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-              onClick={toggleModal}
-            />
-            <div className="absolute inset-4 bg-gray-800/90 backdrop-blur-xl border border-gray-700/50 rounded-xl p-6 max-h-[calc(100vh-2rem)] overflow-y-auto">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-semibold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                  History
-                </h2>
-                <button
-                  onClick={toggleModal}
-                  className="p-2 rounded-lg bg-gray-700/50 hover:bg-gray-600/50 transition-colors"
-                >
-                  <X className="h-5 w-5 text-gray-400 hover:text-white transition-colors" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {history.map((item) => (
-                  <div
-                    key={item.id}
-                    className="group p-4 bg-gray-800/50 backdrop-blur-sm border border-gray-700/30 rounded-xl hover:bg-gray-700/50 transition-all duration-300 cursor-pointer hover:border-blue-500/30"
-                    onClick={() => {
-                      handleHistoryItemClick(item);
-                      toggleModal();
-                    }}
-                  >
-                    <div className="flex items-center mb-2">
-                      <div className="p-2 rounded-lg bg-gray-700/50 group-hover:bg-gray-600/50 transition-colors">
-                        {item.contentType === "twitter" && (
-                          <Twitter className="h-4 w-4 text-blue-400" />
-                        )}
-                        {item.contentType === "instagram" && (
-                          <Instagram className="h-4 w-4 text-pink-400" />
-                        )}
-                        {item.contentType === "linkedin" && (
-                          <Linkedin className="h-4 w-4 text-blue-600" />
-                        )}
-                      </div>
-                      <span className="ml-2 text-sm font-medium text-gray-300 group-hover:text-white transition-colors">
-                        {item.contentType}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-400 group-hover:text-gray-200 transition-colors truncate">
-                      {item.prompt}
-                    </p>
-                    <div className="flex items-center text-xs text-gray-500 mt-2 group-hover:text-gray-400 transition-colors">
-                      <Clock className="mr-1 h-3 w-3" />
-                      {new Date(item.createdAt).toLocaleString()}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+          <Clock className="h-5 w-5" />
+        </Link>
       </div>
       <Footer />
+
+      {/* Details panel moved to /history */}
     </div>
   );
 }

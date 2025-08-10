@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useEffect } from "react";
-import { FaGithub, FaLinkedin, FaGlobe, FaTimes } from "react-icons/fa";
+import { FaGithub, FaLinkedin, FaGlobe, FaTimes, FaTwitter } from "react-icons/fa";
 
 const Footer = () => {
   const [isTermsOpen, setIsTermsOpen] = useState(false);
@@ -69,84 +70,74 @@ const Footer = () => {
 
   return (
     <footer className="relative mt-20">
-      {/* Gradient divider */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-500/20 to-transparent" />
+      {/* Decorative top divider */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent" />
 
-      <div className="bg-gradient-to-b from-gray-900 to-black text-white py-12">
-        <div className="container mx-auto px-4 max-w-4xl">
-          {/* Main footer content */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8 mb-8">
-            {/* Developer info section */}
-            <div className="flex flex-col items-center md:items-start space-y-4">
-              <div className="text-center md:text-left">
-                <p className="text-sm text-gray-400 tracking-wider mb-1">
-                  <i>Developed By</i>
-                </p>
-                <h3 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
-                  Richmond Kofi Azadze
-                </h3>
-              </div>
+      <div className="relative overflow-hidden bg-gradient-to-b from-gray-900 to-black text-white">
+        {/* soft glow decorations */}
+        <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-blue-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-28 -right-28 h-72 w-72 rounded-full bg-purple-500/10 blur-3xl" />
 
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl py-12">
+          
+
+          {/* Main grid (2 columns on mobile) */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {/* Brand */}
+            <div className="col-span-2 md:col-span-2">
+              <h4 className="text-lg font-semibold">Sankpost AI</h4>
+              <p className="mt-2 text-sm text-gray-400 max-w-md">Your AI powered social media copilot. Craft thoughtful posts, captions and updates that resonate with your audience.</p>
               {/* Social links */}
-              <div className="flex space-x-3">
-                {[
-                  {
-                    icon: <FaGithub className="w-5 h-5" />,
-                    href: "https://github.com/richmondazadze",
-                    label: "GitHub",
-                  },
-                  {
-                    icon: <FaLinkedin className="w-5 h-5" />,
-                    href: "https://www.linkedin.com/in/richmond-azadze/",
-                    label: "LinkedIn",
-                  },
-                  {
-                    icon: <FaGlobe className="w-5 h-5" />,
-                    href: "https://richmondazadze.me/",
-                    label: "Portfolio",
-                  },
-                ].map((social) => (
-                  <a
-                    key={social.label}
-                    href={social.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-all duration-300 hover:scale-110"
-                    aria-label={social.label}
-                  >
-                    <div className="text-gray-400 group-hover:text-blue-400 transition-colors duration-300">
-                      {social.icon}
-                    </div>
+              <div className="mt-4 flex items-center gap-3">
+                {[{
+                  icon: <FaGithub className="w-4 h-4" />, href: "https://github.com/richmondazadze", label: "GitHub"
+                },{
+                  icon: <FaLinkedin className="w-4 h-4" />, href: "https://www.linkedin.com/in/richmond-azadze/", label: "LinkedIn"
+                },{
+                  icon: <FaTwitter className="w-4 h-4" />, href: "https://twitter.com/", label: "Twitter"
+                },{
+                  icon: <FaGlobe className="w-4 h-4" />, href: "https://richmondazadze.me/", label: "Portfolio"
+                }].map((s)=> (
+                  <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label}
+                     className="group p-2 rounded-md border border-gray-700/60 bg-gray-800/50 hover:bg-gray-800/70 transition-colors">
+                    <span className="text-gray-400 group-hover:text-blue-400">{s.icon}</span>
                   </a>
                 ))}
               </div>
             </div>
 
-            {/* Vertical Divider - Only visible on md and up */}
-            <div className="hidden md:block w-px h-16 bg-gradient-to-b from-transparent via-gray-700 to-transparent mx-4" />
+            {/* Product */}
+            <div className="col-span-1">
+              <h5 className="text-sm font-semibold text-gray-200">Product</h5>
+              <ul className="mt-3 space-y-2 text-sm text-gray-400">
+                <li><Link href="/generate" className="hover:text-gray-200">Generate</Link></li>
+                <li><Link href="/history" className="hover:text-gray-200">History</Link></li>
+                <li><Link href="/pricing" className="hover:text-gray-200">Pricing</Link></li>
+              </ul>
+            </div>
 
-            {/* Links section */}
-            <div className="flex flex-col items-center md:items-end space-y-2">
-              <button
-                onClick={toggleTerms}
-                className="text-gray-400 hover:text-blue-400 hover:translate-x-1 transition-all duration-300 text-sm"
-              >
-                Terms & Conditions
-              </button>
-              <button
-                onClick={togglePrivacy}
-                className="text-gray-400 hover:text-blue-400 hover:translate-x-1 transition-all duration-300 text-sm"
-              >
-                Privacy Policy
-              </button>
+            {/* Legal */}
+            <div className="col-span-1">
+              <h5 className="text-sm font-semibold text-gray-200">Legal</h5>
+              <ul className="mt-3 space-y-2 text-sm text-gray-400">
+                <li>
+                  <button onClick={toggleTerms} className="hover:text-gray-200">Terms & Conditions</button>
+                </li>
+                <li>
+                  <button onClick={togglePrivacy} className="hover:text-gray-200">Privacy Policy</button>
+                </li>
+              </ul>
             </div>
           </div>
 
-          {/* Copyright */}
-          <div className="pt-6 border-t border-gray-800/50 text-center">
-            <p className="text-sm text-gray-500">
-              © {new Date().getFullYear()} SankPost AI. All rights reserved.
-            </p>
+          {/* Bottom bar */}
+          <div className="mt-10 pt-6 border-t border-gray-800/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500">
+            <p>© {new Date().getFullYear()} Sankpost AI. All rights reserved.</p>
+            <div className="flex items-center gap-2 text-xs">
+              <span className="rounded-full bg-gray-800/60 px-2 py-1 border border-gray-700/50">Next.js</span>
+              <span className="rounded-full bg-gray-800/60 px-2 py-1 border border-gray-700/50">Clerk</span>
+              <span className="rounded-full bg-gray-800/60 px-2 py-1 border border-gray-700/50">Stripe</span>
+            </div>
           </div>
         </div>
       </div>

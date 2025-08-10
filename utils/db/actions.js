@@ -20,15 +20,12 @@ export async function updateUserPoints(userId, points) {
 
 export async function getUserPoints(userId) {
   try {
-    console.log("Fetching points for user:", userId);
     const users = await db
       .select({ points: Users.points, id: Users.id, email: Users.email })
       .from(Users)
       .where(eq(Users.stripeCustomerId, userId))
       .execute();
-    console.log("Fetched users:", users);
     if (users.length === 0) {
-      console.log("No user found with stripeCustomerId:", userId);
       return 0;
     }
     return users[0].points || 0;
@@ -93,7 +90,6 @@ export async function createOrUpdateSubscription(
         .execute();
     }
 
-    console.log("Subscription created or updated:", subscription);
     return subscription;
   } catch (error) {
     console.error("Error creating or updating subscription:", error);
@@ -161,7 +157,6 @@ export async function createOrUpdateUser(
   name
 ) {
   try {
-    console.log("Creating or updating user:", clerkUserId, email, name);
 
     const [existingUser] = await db
       .select()
@@ -177,7 +172,6 @@ export async function createOrUpdateUser(
         .where(eq(Users.stripeCustomerId, clerkUserId))
         .returning()
         .execute();
-      console.log("Updated user:", updatedUser);
       return updatedUser;
     }
 
@@ -195,7 +189,6 @@ export async function createOrUpdateUser(
         .where(eq(Users.email, email))
         .returning()
         .execute();
-      console.log("Updated user:", updatedUser);
       sendWelcomeEmail(email, name);
       return updatedUser;
     }
@@ -205,7 +198,6 @@ export async function createOrUpdateUser(
       .values({ email, name, stripeCustomerId: clerkUserId, points: 50 })
       .returning()
       .execute();
-    console.log("New user created:", newUser);
     sendWelcomeEmail(email, name);
     return newUser;
   } catch (error) {

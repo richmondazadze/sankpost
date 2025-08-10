@@ -34,13 +34,9 @@ export function Navbar() {
   }, []);
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? "bg-gray-900/80 backdrop-blur-xl border-b border-gray-800/50 shadow-lg"
-          : "bg-transparent"
-      }`}
-    >
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-gray-900/85 backdrop-blur-xl border-b border-gray-800/50 ${
+      isScrolled ? "shadow-lg" : "shadow-none"
+    }`}>
       <nav className="container mx-auto px-4 lg:px-8">
         <div className="flex flex-wrap justify-between items-center h-16 md:h-20">
           <div className="flex items-center">
