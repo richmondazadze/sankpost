@@ -224,7 +224,6 @@ export default function GenerateContent() {
         body: JSON.stringify({
           prompt: promptText,
           imageDataUrl,
-          model: "google/gemini-2.0-flash-exp:free",
         }),
       });
 

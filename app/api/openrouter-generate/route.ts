@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     }
 
     const chosenModel =
-      model?.trim() || "google/gemini-2.0-flash-exp:free";
+      model?.trim() || "mistralai/mistral-small-3.2-24b-instruct:free";
 
     const messages: any[] = [
       {
@@ -90,11 +90,11 @@ export async function POST(req: Request) {
         if (process.env.OPENROUTER_FALLBACK_MODEL) {
           alternates.push(process.env.OPENROUTER_FALLBACK_MODEL);
         }
-        // Then try stable/known slugs
+        // Then try stable/known slugs from Mistral and other reliable options
         alternates.push(
-          "google/gemini-2.0-flash-exp:free",
-          "google/gemini-flash-1.5",
-          "google/gemini-flash-1.5-8b"
+          "mistralai/mistral-medium",
+          "mistralai/mistral-small-latest",
+          "openai/gpt-4o-mini"
         );
 
         for (const alt of alternates) {
