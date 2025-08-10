@@ -33,6 +33,7 @@ import { TwitterMock } from "../../components/social-mocks/TwitterMock";
 import { InstagramMock } from "../../components/social-mocks/InstagramMock";
 import { LinkedInMock } from "../../components/social-mocks/LinkedInMock";
 import Link from "next/link";
+import imageCompression from "browser-image-compression";
 
 // Switched to OpenRouter server route; no direct SDK on client
 
@@ -128,26 +129,31 @@ const compressImageToLimit = async (file, {
   minQuality = 0.5,
 } = {}) => {
   try {
-    // Decode
-    const imageBitmap = await createImageBitmap(file);
+    // Try library first (handles multiple formats efficiently)
+    const compressed = await imageCompression(file, {
+      maxSizeMB: Math.max(0.2, maxBytes / (1024 * 1024)),
+      maxWidthOrHeight: maxWidth,
+      useWebWorker: true,
+      initialQuality: 0.85,
+    });
+    if (compressed && compressed.size <= maxBytes) return compressed;
+    // Fallback: simple canvas-based downscale if still too large
+    const imageBitmap = await createImageBitmap(compressed || file);
     const scale = Math.min(1, maxWidth / Math.max(imageBitmap.width, imageBitmap.height));
     const targetWidth = Math.max(1, Math.round(imageBitmap.width * scale));
     const targetHeight = Math.max(1, Math.round(imageBitmap.height * scale));
-
     const canvas = document.createElement("canvas");
     canvas.width = targetWidth;
     canvas.height = targetHeight;
     const ctx = canvas.getContext("2d");
     ctx.drawImage(imageBitmap, 0, 0, targetWidth, targetHeight);
-
-    let quality = 0.85;
+    let quality = 0.8;
     let blob = await new Promise((res) => canvas.toBlob(res, "image/jpeg", quality));
-    // Reduce quality until under limit or minQuality
     while (blob && blob.size > maxBytes && quality > minQuality) {
       quality = Math.max(minQuality, quality - 0.1);
       blob = await new Promise((res) => canvas.toBlob(res, "image/jpeg", quality));
     }
-    return blob ?? file;
+    return blob ?? (compressed || file);
   } catch (e) {
     // Fallback: return original if compression fails
     return file;
