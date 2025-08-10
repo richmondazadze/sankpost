@@ -111,7 +111,7 @@ The post should:
 Format with proper paragraph spacing and professional structure.`,
 };
 
-// Convert a File to a data URL for OpenRouter image_url content
+// Convert a Blob/File to a data URL for OpenRouter image_url content
 const fileToDataUrl = async (file) =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -119,6 +119,40 @@ const fileToDataUrl = async (file) =>
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+
+// Compress an image in the browser to fit under a target byte size
+// Strategy: scale down to maxWidth, then try JPEG qualities until under limit
+const compressImageToLimit = async (file, {
+  maxBytes = MAX_IMAGE_BYTES,
+  maxWidth = 1600,
+  minQuality = 0.5,
+} = {}) => {
+  try {
+    // Decode
+    const imageBitmap = await createImageBitmap(file);
+    const scale = Math.min(1, maxWidth / Math.max(imageBitmap.width, imageBitmap.height));
+    const targetWidth = Math.max(1, Math.round(imageBitmap.width * scale));
+    const targetHeight = Math.max(1, Math.round(imageBitmap.height * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(imageBitmap, 0, 0, targetWidth, targetHeight);
+
+    let quality = 0.85;
+    let blob = await new Promise((res) => canvas.toBlob(res, "image/jpeg", quality));
+    // Reduce quality until under limit or minQuality
+    while (blob && blob.size > maxBytes && quality > minQuality) {
+      quality = Math.max(minQuality, quality - 0.1);
+      blob = await new Promise((res) => canvas.toBlob(res, "image/jpeg", quality));
+    }
+    return blob ?? file;
+  } catch (e) {
+    // Fallback: return original if compression fails
+    return file;
+  }
+};
 
 const processInstagramContent = (content) => {
   const captionMatch = content.match(/CAPTION: ([\s\S]*?)(?=HASHTAGS:|$)/);
@@ -335,14 +369,19 @@ export default function GenerateContent() {
 
   //
 
-  const handleImageUpload = (event) => {
+  const handleImageUpload = async (event) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
-      if (file.size > MAX_IMAGE_BYTES) {
-        alert("Image too large. Please upload an image under 2MB.");
+      // Try to compress if over limit
+      const processed = file.size > MAX_IMAGE_BYTES
+        ? await compressImageToLimit(file)
+        : file;
+
+      if (processed.size > MAX_IMAGE_BYTES) {
+        alert(`Image too large after compression. Please choose a smaller image (max ${(MAX_IMAGE_BYTES/1_000_000).toFixed(1)} MB).`);
         return;
       }
-      setImage(file);
+      setImage(processed);
     }
   };
 
