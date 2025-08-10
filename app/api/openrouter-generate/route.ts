@@ -82,6 +82,35 @@ export async function POST(req: Request) {
           { status: 429 }
         );
       }
+
+      // If model is not available with current slug, try known alternates
+      if (status === 404 && /No endpoints found/i.test(errorText)) {
+        const alternates: string[] = [];
+        // Prefer explicit env fallback first
+        if (process.env.OPENROUTER_FALLBACK_MODEL) {
+          alternates.push(process.env.OPENROUTER_FALLBACK_MODEL);
+        }
+        // Then try stable/known slugs
+        alternates.push(
+          "google/gemini-2.0-flash-exp:free",
+          "google/gemini-flash-1.5",
+          "google/gemini-flash-1.5-8b"
+        );
+
+        for (const alt of alternates) {
+          try {
+            const altResp = await callOpenRouter(alt);
+            if (altResp.ok) {
+              const data = await altResp.json();
+              const text: string = data?.choices?.[0]?.message?.content ?? "";
+              return NextResponse.json({ text, model: alt });
+            }
+          } catch {
+            // ignore and continue
+          }
+        }
+      }
+
       return NextResponse.json({ error: errorText }, { status });
     }
 

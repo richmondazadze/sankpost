@@ -1,6 +1,10 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 
-export default clerkMiddleware();
+export default clerkMiddleware({
+  // Allow unauthenticated access to the OpenRouter proxy so generation works
+  // even if Clerk is misconfigured or you're not logged in yet.
+  publicRoutes: ["/api/openrouter-generate"],
+});
 
 export const config = {
   matcher: [
