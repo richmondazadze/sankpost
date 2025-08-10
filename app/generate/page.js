@@ -378,13 +378,19 @@ export default function GenerateContent() {
   const handleImageUpload = async (event) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
-      // Try to compress if over limit
-      const processed = file.size > MAX_IMAGE_BYTES
-        ? await compressImageToLimit(file)
+      const isMobile = (typeof window !== "undefined" && window.innerWidth < 640) ||
+        (typeof navigator !== "undefined" && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
+      const isHeic = /heic|heif/i.test(file.type || "");
+      const mobileTargetBytes = 3_000_000; // ~3MB
+      const allowedBytes = isMobile ? Math.min(MAX_IMAGE_BYTES, mobileTargetBytes) : MAX_IMAGE_BYTES;
+      const shouldCompress = isMobile || isHeic || file.size > allowedBytes;
+
+      const processed = shouldCompress
+        ? await compressImageToLimit(file, { maxBytes: allowedBytes, maxWidth: isMobile ? 1280 : 1600 })
         : file;
 
-      if (processed.size > MAX_IMAGE_BYTES) {
-        alert(`Image too large after compression. Please choose a smaller image (max ${(MAX_IMAGE_BYTES/1_000_000).toFixed(1)} MB).`);
+      if (processed.size > allowedBytes) {
+        alert(`Image too large after compression. Please choose a smaller image (max ${(allowedBytes/1_000_000).toFixed(1)} MB).`);
         return;
       }
       setImage(processed);
