@@ -34,6 +34,7 @@ import { InstagramMock } from "../../components/social-mocks/InstagramMock";
 import { LinkedInMock } from "../../components/social-mocks/LinkedInMock";
 import Link from "next/link";
 import imageCompression from "browser-image-compression";
+import Compressor from "compressorjs";
 
 // Switched to OpenRouter server route; no direct SDK on client
 
@@ -129,14 +130,27 @@ const compressImageToLimit = async (file, {
   minQuality = 0.5,
 } = {}) => {
   try {
-    // Try library first (handles multiple formats efficiently)
-    const compressed = await imageCompression(file, {
+    // Try Compressor.js first (handles HEIC conversions in many browsers)
+    const compressed = await new Promise((resolve, reject) => {
+      // quality is 0..1 in Compressor; convert bytes target to approx quality
+      new Compressor(file, {
+        quality: 0.85,
+        convertSize: maxBytes + 1, // force conversion to JPEG/WebP regardless of original
+        maxWidth,
+        mimeType: "image/jpeg",
+        success: (result) => resolve(result),
+        error: (err) => resolve(null),
+      });
+    });
+    // If still too large, try browser-image-compression as a second pass
+    if (compressed && compressed.size <= maxBytes) return compressed;
+    const bic = await imageCompression(compressed || file, {
       maxSizeMB: Math.max(0.2, maxBytes / (1024 * 1024)),
       maxWidthOrHeight: maxWidth,
       useWebWorker: true,
-      initialQuality: 0.85,
+      initialQuality: 0.8,
     });
-    if (compressed && compressed.size <= maxBytes) return compressed;
+    if (bic && bic.size <= maxBytes) return bic;
     // Fallback: simple canvas-based downscale if still too large
     const imageBitmap = await createImageBitmap(compressed || file);
     const scale = Math.min(1, maxWidth / Math.max(imageBitmap.width, imageBitmap.height));
