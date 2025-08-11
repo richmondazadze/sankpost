@@ -26,6 +26,7 @@ export async function POST(req: Request) {
         content: imageDataUrl
           ? [
               { type: "text", text: prompt },
+              // Some providers expect {url} or {image_url: {url}}, normalize both
               { type: "image_url", image_url: { url: imageDataUrl } },
             ]
           : [{ type: "text", text: prompt }],

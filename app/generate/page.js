@@ -128,6 +128,7 @@ const compressImageToLimit = async (file, {
   maxBytes = MAX_IMAGE_BYTES,
   maxWidth = 1600,
   minQuality = 0.5,
+  mimeType = "image/jpeg",
 } = {}) => {
   try {
     // Try Compressor.js first (handles HEIC conversions in many browsers)
@@ -137,7 +138,7 @@ const compressImageToLimit = async (file, {
         quality: 0.85,
         convertSize: maxBytes + 1, // force conversion to JPEG/WebP regardless of original
         maxWidth,
-        mimeType: "image/jpeg",
+        mimeType,
         success: (result) => resolve(result),
         error: (err) => resolve(null),
       });
@@ -162,10 +163,10 @@ const compressImageToLimit = async (file, {
     const ctx = canvas.getContext("2d");
     ctx.drawImage(imageBitmap, 0, 0, targetWidth, targetHeight);
     let quality = 0.8;
-    let blob = await new Promise((res) => canvas.toBlob(res, "image/jpeg", quality));
+    let blob = await new Promise((res) => canvas.toBlob(res, mimeType, quality));
     while (blob && blob.size > maxBytes && quality > minQuality) {
       quality = Math.max(minQuality, quality - 0.1);
-      blob = await new Promise((res) => canvas.toBlob(res, "image/jpeg", quality));
+      blob = await new Promise((res) => canvas.toBlob(res, mimeType, quality));
     }
     return blob ?? (compressed || file);
   } catch (e) {
@@ -394,13 +395,14 @@ export default function GenerateContent() {
       const file = event.target.files[0];
       const isMobile = (typeof window !== "undefined" && window.innerWidth < 640) ||
         (typeof navigator !== "undefined" && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
-      const isHeic = /heic|heif/i.test(file.type || "");
+      const isHeic = /heic|heif/i.test(file.type || "") || /\.heic$|\.heif$/i.test(file.name || "");
       const mobileTargetBytes = 3_000_000; // ~3MB
       const allowedBytes = isMobile ? Math.min(MAX_IMAGE_BYTES, mobileTargetBytes) : MAX_IMAGE_BYTES;
       const shouldCompress = isMobile || isHeic || file.size > allowedBytes;
 
+      const targetMime = isHeic ? "image/jpeg" : (file.type || "image/jpeg");
       const processed = shouldCompress
-        ? await compressImageToLimit(file, { maxBytes: allowedBytes, maxWidth: isMobile ? 1280 : 1600 })
+        ? await compressImageToLimit(file, { maxBytes: allowedBytes, maxWidth: isMobile ? 1280 : 1600, mimeType: targetMime })
         : file;
 
       if (processed.size > allowedBytes) {
